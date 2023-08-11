@@ -1,7 +1,9 @@
 package repo
 
-import "gitub.com/sriramr98/codesync/services"
+import (
+	"github.com/spf13/afero"
+)
 
 type Repo struct {
-	fs services.FileSystem
+	fs afero.Fs
 }
