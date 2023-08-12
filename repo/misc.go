@@ -3,7 +3,11 @@ package repo
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"io"
+	"os"
+	"path"
+	"path/filepath"
 
 	"gopkg.in/ini.v1"
 )
@@ -34,5 +38,37 @@ func (r *Repo) getConfig() ([]byte, error) {
 	}
 
 	return io.ReadAll(buf)
+}
 
+func (r *Repo) findRootDir(dirPath string) (string, error) {
+	if !filepath.IsAbs(dirPath) {
+		path, err := filepath.Abs(dirPath)
+		if err != nil {
+			return "", err
+		}
+		dirPath = path
+	}
+
+	_, err := os.Stat(path.Join(dirPath, ".git"))
+	if err != nil {
+		if os.IsNotExist(err) {
+			return dirPath, nil
+		}
+		return "", err
+	}
+
+	// Find absolute parent path from the relative path
+	parentPath := path.Join("..", dirPath)
+	parentPath, err = filepath.Abs(parentPath)
+	if err != nil {
+		return "", err
+	}
+
+	// ../ == / ( we're at the root of the FS )
+	if parentPath == dirPath {
+		return "", errors.New("could not find git root directory")
+	}
+
+	// Check parent recursively
+	return r.findRootDir(parentPath)
 }
