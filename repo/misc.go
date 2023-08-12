@@ -6,7 +6,6 @@ import (
 	"errors"
 	"io"
 	"os"
-	"path"
 	"path/filepath"
 
 	"gopkg.in/ini.v1"
@@ -49,24 +48,14 @@ func (r *Repo) findRootDir(dirPath string) (string, error) {
 		dirPath = path
 	}
 
-	_, err := os.Stat(path.Join(dirPath, ".git"))
-	if err != nil {
-		if os.IsNotExist(err) {
-			return dirPath, nil
-		}
-		return "", err
+	// Check if dirPath has a folder .git
+	if _, err := os.Stat(filepath.Join(dirPath, ".git")); err == nil {
+		return dirPath, nil
 	}
 
-	// Find absolute parent path from the relative path
-	parentPath := path.Join("..", dirPath)
-	parentPath, err = filepath.Abs(parentPath)
-	if err != nil {
-		return "", err
-	}
-
-	// ../ == / ( we're at the root of the FS )
+	parentPath := filepath.Dir(dirPath)
 	if parentPath == dirPath {
-		return "", errors.New("could not find git root directory")
+		return "", errors.New("could not find .git directory")
 	}
 
 	// Check parent recursively
