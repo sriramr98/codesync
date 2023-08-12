@@ -17,7 +17,7 @@ func (r Repo) Status() (string, error) {
 
 	if _, err := os.Stat(path.Join(pwd, ".git")); err != nil {
 		if os.IsNotExist(err) {
-			rootDir, err := r.findRootDir(pwd)
+			rootDir, err := r.FindRootDir(pwd)
 			if err != nil {
 				return "", errors.New("not a git repository")
 			}

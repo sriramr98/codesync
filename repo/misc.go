@@ -39,7 +39,7 @@ func (r *Repo) getConfig() ([]byte, error) {
 	return io.ReadAll(buf)
 }
 
-func (r *Repo) findRootDir(dirPath string) (string, error) {
+func (r *Repo) FindRootDir(dirPath string) (string, error) {
 	if !filepath.IsAbs(dirPath) {
 		path, err := filepath.Abs(dirPath)
 		if err != nil {
@@ -59,5 +59,5 @@ func (r *Repo) findRootDir(dirPath string) (string, error) {
 	}
 
 	// Check parent recursively
-	return r.findRootDir(parentPath)
+	return r.FindRootDir(parentPath)
 }
