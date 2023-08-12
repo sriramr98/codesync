@@ -2,9 +2,10 @@ package repo
 
 import (
 	"errors"
-	"fmt"
+	"log"
 	"os"
 	"path"
+	"path/filepath"
 )
 
 var ErrUnableToInitialize = errors.New("unable to initialize repo")
@@ -17,12 +18,18 @@ func (r Repo) Init(rootPath string) error {
 	}
 
 	gitPath := path.Join(rootPath, ".git")
-
-	if _, err := os.Stat(gitPath); err != nil {
+	gitPath, err := filepath.Abs(gitPath)
+	if err != nil {
 		return err
 	}
 
-	fmt.Println("Initializing a new repo at " + rootPath)
+	log.Printf("Checking for git path %s\n", gitPath)
+	if _, err := os.Stat(gitPath); err == nil {
+		// git repo already exists
+		return ErrAlreadyInitialized
+	}
+
+	log.Println("Initializing a new repo at " + rootPath)
 
 	if err := os.MkdirAll(path.Join(gitPath, "branches"), 0755); err != nil {
 		return ErrUnableToInitialize

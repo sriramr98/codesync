@@ -4,6 +4,8 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"log"
+
 	"github.com/spf13/cobra"
 	"gitub.com/sriramr98/codesync/repo"
 )
@@ -27,7 +29,11 @@ to quickly create a Cobra application.`,
 			path = args[0]
 		}
 
-		repo.Init(path)
+		err := repo.Init(path)
+
+		if err != nil {
+			log.Fatal(err)
+		}
 	},
 }
 
