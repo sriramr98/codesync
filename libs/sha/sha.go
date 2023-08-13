@@ -2,11 +2,11 @@ package sha
 
 import (
 	"crypto/sha1"
-	"encoding/base64"
+	"encoding/hex"
 )
 
-func ConvertToShaBase64(content string) string {
+func ConvertToShaBase64(content []byte) string {
 	hash := sha1.New()
-	hash.Write([]byte(content))
-	return base64.URLEncoding.EncodeToString(hash.Sum(nil))
+	hash.Write(content)
+	return hex.EncodeToString(hash.Sum(nil))
 }

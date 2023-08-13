@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"path"
@@ -22,6 +23,7 @@ func (r Repo) ReadObject(gitFolderPath string, sha string) (GitObject, error) {
 
 	data, err := zlib.UnCompress(objectFile)
 	if err != nil {
+		fmt.Println("Uncompress err")
 		return GitObject{}, err
 	}
 
@@ -46,29 +48,46 @@ func (r Repo) ReadObject(gitFolderPath string, sha string) (GitObject, error) {
 	return GitObject{Type: string(objectType), Content: objectContent}, nil
 }
 
-func (r Repo) WriteObject(gitFolderPath string, data GitObject) error {
-	sha := sha.ConvertToShaBase64(data.Content)
+func (r Repo) WriteObject(gitFolderPath string, data GitObject) (string, error) {
+	objectContent := data.Encode()
+
+	sha := sha.ConvertToShaBase64(objectContent)
+
 	objectFolderName := sha[0:2]
 	objectFileName := sha[2:]
 
-	err := os.MkdirAll(path.Join(gitFolderPath, "objects", objectFolderName), 0755)
+	foldePath := path.Join(gitFolderPath, "objects", objectFolderName)
+
+	err := os.MkdirAll(foldePath, 0755)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	objectContent := data.Encode()
-	compressed, err := zlib.Compress(objectContent)
+	// file, err := os.Open(path.Join(foldePath, objectFileName))
+	// if err != nil {
+	// 	return "", err
+	// }
+
+	var b bytes.Buffer
+	zlib.Compress(objectContent, &b)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	// write to file
-	return os.WriteFile(
-		path.Join(gitFolderPath, "objects", objectFolderName, objectFileName),
-		compressed,
+	dataToWrite, err := io.ReadAll(&b)
+	if err != nil {
+		return "", err
+	}
+	err = os.WriteFile(
+		path.Join(foldePath, objectFileName),
+		dataToWrite,
 		0644,
 	)
+	if err != nil {
+		return "", err
+	}
 
+	return sha, nil
 }
 
 func (r Repo) findFileFromSHA(rootFolderPath string, sha string) (fs.File, error) {

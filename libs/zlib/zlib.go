@@ -1,7 +1,6 @@
 package zlib
 
 import (
-	"bytes"
 	"compress/zlib"
 	"io"
 )
@@ -15,11 +14,8 @@ func UnCompress(r io.Reader) ([]byte, error) {
 	return io.ReadAll(zio)
 }
 
-func Compress(data []byte) ([]byte, error) {
-	var b bytes.Buffer
-	zio := zlib.NewWriter(&b)
-	defer zio.Close()
-
+func Compress(data []byte, w io.Writer) {
+	zio := zlib.NewWriter(w)
 	zio.Write(data)
-	return b.Bytes(), nil
+	zio.Close()
 }
