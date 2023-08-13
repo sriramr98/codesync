@@ -9,13 +9,9 @@ import (
 	"path"
 	"strconv"
 
-	zlib "gitub.com/sriramr98/codesync/utils"
+	"gitub.com/sriramr98/codesync/libs/sha"
+	"gitub.com/sriramr98/codesync/libs/zlib"
 )
-
-type GitObject struct {
-	Type    string
-	Content string
-}
 
 func (r Repo) ReadObject(gitFolderPath string, sha string) (GitObject, error) {
 	objectFile, err := r.findFileFromSHA(gitFolderPath, sha)
@@ -48,6 +44,30 @@ func (r Repo) ReadObject(gitFolderPath string, sha string) (GitObject, error) {
 	objectContent := string(data[nullEndIndex+1:])
 
 	return GitObject{Type: string(objectType), Content: objectContent}, nil
+}
+
+func (r Repo) WriteObject(gitFolderPath string, data GitObject) error {
+	sha := sha.ConvertToShaBase64(data.Content)
+	objectFolderName := sha[0:2]
+	objectFileName := sha[2:]
+
+	err := os.MkdirAll(path.Join(gitFolderPath, "objects", objectFolderName), 0755)
+	if err != nil {
+		return err
+	}
+
+	objectContent := data.Encode()
+	compressed, err := zlib.Compress(objectContent)
+	if err != nil {
+		return err
+	}
+
+	// write to file
+	return os.WriteFile(
+		path.Join(gitFolderPath, "objects", objectFolderName, objectFileName),
+		compressed,
+		0644,
+	)
 
 }
 
