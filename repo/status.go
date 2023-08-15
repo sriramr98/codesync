@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path"
 )
 
 func (r Repo) Status() (string, error) {
@@ -15,16 +14,10 @@ func (r Repo) Status() (string, error) {
 		return "", err
 	}
 
-	if _, err := os.Stat(path.Join(pwd, ".git")); err != nil {
-		if os.IsNotExist(err) {
-			rootDir, err := r.FindRootDir(pwd)
-			if err != nil {
-				return "", errors.New("not a git repository")
-			}
-			return "Git Root at " + rootDir, nil
-		}
-		return "", err
+	rootDir, err := r.FindRootDir(pwd)
+	if err != nil {
+		return "", errors.New("not a git repository")
 	}
+	return "Git Root at " + rootDir, nil
 
-	return "Git Root at " + pwd, nil
 }
