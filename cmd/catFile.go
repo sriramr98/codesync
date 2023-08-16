@@ -1,16 +1,11 @@
-/*
-Copyright © 2023 NAME HERE <EMAIL ADDRESS>
-*/
 package cmd
 
 import (
 	"fmt"
-	"log"
-	"os"
-	"path"
-
 	"github.com/spf13/cobra"
 	"gitub.com/sriramr98/codesync/repo"
+	"log"
+	"os"
 )
 
 var prettyPrint bool = false
@@ -45,12 +40,11 @@ to quickly create a Cobra application.`,
 		}
 
 		repo := repo.Repo{}
-		projectRootDir, err := repo.FindRootDir(currentDirPath)
+		gitPath, err := repo.FindGitDir(currentDirPath)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		gitPath := path.Join(projectRootDir, ".git")
 		object, err := repo.ReadObject(gitPath, args[0])
 		if err != nil {
 			log.Fatal(err)

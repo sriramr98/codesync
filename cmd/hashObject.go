@@ -1,19 +1,15 @@
-/*
-Copyright © 2023 NAME HERE <EMAIL ADDRESS>
-*/
 package cmd
 
 import (
 	"bufio"
 	"errors"
 	"fmt"
-	"log"
-	"os"
-	"path"
-
 	"github.com/spf13/cobra"
 	"gitub.com/sriramr98/codesync/libs/sha"
 	"gitub.com/sriramr98/codesync/repo"
+	"gitub.com/sriramr98/codesync/repo/object"
+	"log"
+	"os"
 )
 
 var writeObject bool
@@ -41,14 +37,9 @@ func extractDataToWrite(args []string) (string, error) {
 // hashObjectCmd represents the hashObject command
 var hashObjectCmd = &cobra.Command{
 	Use:   "hash-object",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Args: cobra.MaximumNArgs(1),
+	Short: "Hashes content",
+	Long:  `Converts the input file or content into a Git Hash and optionally writes it to the database`,
+	Args:  cobra.MaximumNArgs(1),
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		if !readFromStdin && len(args) == 0 {
 			// not reading data either from stdin or args
@@ -63,24 +54,24 @@ to quickly create a Cobra application.`,
 			log.Fatal(err)
 		}
 		fmt.Printf("Data To write %s\n", dataToWrite)
-		gitObject := repo.GitObject{
-			Type:    objectType,
+		gitObject := object.GitObject{
 			Content: dataToWrite,
+			Type:    "blob",
 		}
 
 		if !writeObject || readFromStdin {
 			// Only calculate HASH and print
 			encodedData := gitObject.Encode()
-			hash := sha.ConvertToShaBase64(encodedData)
+			hash := sha.ConvertToShaHex(encodedData)
 			fmt.Print(hash)
 		} else {
 			// hash and write
 			repo := repo.Repo{}
-			projectRoot, err := repo.FindRootDir(".")
+			gitDir, err := repo.FindGitDir(".")
 			if err != nil {
 				log.Fatal(err)
 			}
-			hash, err := repo.WriteObject(path.Join(projectRoot, ".git"), gitObject)
+			hash, err := repo.WriteObject(gitDir, gitObject)
 			if err != nil {
 				log.Fatal(err)
 			}

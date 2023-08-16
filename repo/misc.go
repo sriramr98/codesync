@@ -6,12 +6,13 @@ import (
 	"errors"
 	"io"
 	"os"
+	"path"
 	"path/filepath"
 
 	"gopkg.in/ini.v1"
 )
 
-func (r *Repo) getConfig() ([]byte, error) {
+func (r Repo) getConfig() ([]byte, error) {
 	config := ini.Empty()
 	core, err := config.NewSection("core")
 	if err != nil {
@@ -19,11 +20,20 @@ func (r *Repo) getConfig() ([]byte, error) {
 	}
 
 	// the version of the gitdir format. 0 means the initial format, 1 the same with extensions. If > 1, git will panic; rs will only accept 0.
-	core.NewKey("repositoryformatversion", "0")
+	_, err = core.NewKey("repositoryformatversion", "0")
+	if err != nil {
+		return nil, err
+	}
 	// disable tracking of file mode (permissions) changes in the work tree.
-	core.NewKey("filemode", "true")
+	_, err = core.NewKey("filemode", "true")
+	if err != nil {
+		return nil, err
+	}
 	// indicates that this repository has a worktree. Git supports an optional worktree key which indicates the location of the worktree, if not ..; rs doesn’t.
-	core.NewKey("bare", "false")
+	_, err = core.NewKey("bare", "false")
+	if err != nil {
+		return nil, err
+	}
 
 	buf := new(bytes.Buffer)
 	writer := bufio.NewWriter(buf)
@@ -39,7 +49,7 @@ func (r *Repo) getConfig() ([]byte, error) {
 	return io.ReadAll(buf)
 }
 
-func (r *Repo) FindRootDir(dirPath string) (string, error) {
+func (r Repo) FindGitDir(dirPath string) (string, error) {
 	if !filepath.IsAbs(dirPath) {
 		path, err := filepath.Abs(dirPath)
 		if err != nil {
@@ -49,8 +59,9 @@ func (r *Repo) FindRootDir(dirPath string) (string, error) {
 	}
 
 	// Check if dirPath has a folder .git
-	if _, err := os.Stat(filepath.Join(dirPath, ".git")); err == nil {
-		return dirPath, nil
+	gitDir := path.Join(dirPath, ".git")
+	if _, err := os.Stat(gitDir); err == nil {
+		return gitDir, nil
 	}
 
 	parentPath := filepath.Dir(dirPath)
@@ -59,5 +70,5 @@ func (r *Repo) FindRootDir(dirPath string) (string, error) {
 	}
 
 	// Check parent recursively
-	return r.FindRootDir(parentPath)
+	return r.FindGitDir(parentPath)
 }

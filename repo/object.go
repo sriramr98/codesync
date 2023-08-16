@@ -12,19 +12,20 @@ import (
 
 	"gitub.com/sriramr98/codesync/libs/sha"
 	"gitub.com/sriramr98/codesync/libs/zlib"
+	"gitub.com/sriramr98/codesync/repo/object"
 )
 
-func (r Repo) ReadObject(gitFolderPath string, sha string) (GitObject, error) {
+func (r Repo) ReadObject(gitFolderPath string, sha string) (object.GitObject, error) {
 	objectFile, err := r.findFileFromSHA(gitFolderPath, sha)
 	if err != nil {
-		return GitObject{}, err
+		return object.GitObject{}, err
 	}
 	defer objectFile.Close()
 
 	data, err := zlib.UnCompress(objectFile)
 	if err != nil {
 		fmt.Println("Uncompress err")
-		return GitObject{}, err
+		return object.GitObject{}, err
 	}
 
 	// finding the first space to detect the object type
@@ -35,26 +36,25 @@ func (r Repo) ReadObject(gitFolderPath string, sha string) (GitObject, error) {
 	nullEndIndex := bytes.Index(data, []byte("\x00"))
 	size, err := strconv.Atoi(string(data[typeEndIndex+1 : nullEndIndex]))
 	if err != nil {
-		return GitObject{}, err
+		return object.GitObject{}, err
 	}
 
 	// if parsed size doesn't match the actual size of remaining data, return error
 	if size != len(data)-nullEndIndex-1 {
-		return GitObject{}, fmt.Errorf("size mismatch")
+		return object.GitObject{}, fmt.Errorf("size mismatch")
 	}
 
 	objectContent := string(data[nullEndIndex+1:])
-
-	return GitObject{Type: string(objectType), Content: objectContent}, nil
+	return object.GitObject{Type: string(objectType), Content: objectContent}, nil
 }
 
-func (r Repo) WriteObject(gitFolderPath string, data GitObject) (string, error) {
+func (r Repo) WriteObject(gitFolderPath string, data object.GitObject) (string, error) {
 	objectContent := data.Encode()
 
-	sha := sha.ConvertToShaBase64(objectContent)
+	shaHex := sha.ConvertToShaHex(objectContent)
 
-	objectFolderName := sha[0:2]
-	objectFileName := sha[2:]
+	objectFolderName := shaHex[0:2]
+	objectFileName := shaHex[2:]
 
 	foldePath := path.Join(gitFolderPath, "objects", objectFolderName)
 
@@ -87,7 +87,7 @@ func (r Repo) WriteObject(gitFolderPath string, data GitObject) (string, error) 
 		return "", err
 	}
 
-	return sha, nil
+	return shaHex, nil
 }
 
 func (r Repo) findFileFromSHA(rootFolderPath string, sha string) (fs.File, error) {
