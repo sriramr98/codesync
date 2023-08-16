@@ -51,11 +51,11 @@ func (r Repo) getConfig() ([]byte, error) {
 
 func (r Repo) FindGitDir(dirPath string) (string, error) {
 	if !filepath.IsAbs(dirPath) {
-		path, err := filepath.Abs(dirPath)
+		absPath, err := filepath.Abs(dirPath)
 		if err != nil {
 			return "", err
 		}
-		dirPath = path
+		dirPath = absPath
 	}
 
 	// Check if dirPath has a folder .git
