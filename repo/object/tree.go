@@ -101,8 +101,6 @@ func treeLeafParser(data []byte) (TreeNode, int, error) {
 
 	// we fetch 20 bytes from the null character considered as SHA and convert to HEX string
 	sha := hex.EncodeToString(data[pathEndIndex+1 : pathEndIndex+21])
-	// we pad it with 0's upto 40 bytes
-	sha = fmt.Sprintf("%040s", sha)
 
 	return TreeNode{Mode: string(mode), Path: string(path), Sha: sha}, pathEndIndex + 21, nil
 }
