@@ -4,16 +4,17 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"gitub.com/sriramr98/codesync/database"
+	"gitub.com/sriramr98/codesync/object"
+	"log"
+	"os"
+
 	"github.com/spf13/cobra"
 	"gitub.com/sriramr98/codesync/libs/sha"
 	"gitub.com/sriramr98/codesync/repo"
-	"gitub.com/sriramr98/codesync/repo/object"
-	"log"
-	"os"
 )
 
 var writeObject bool
-var objectType string
 var readFromStdin bool
 
 func readFile(path string) (string, error) {
@@ -48,30 +49,42 @@ var hashObjectCmd = &cobra.Command{
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("Flags; stdin %t, write %t, objectType %s\n", readFromStdin, writeObject, objectType)
+		fmt.Printf("Flags; stdin %t, write %t\n", readFromStdin, writeObject)
 		dataToWrite, err := extractDataToWrite(args)
 		if err != nil {
 			log.Fatal(err)
 		}
 		fmt.Printf("Data To write %s\n", dataToWrite)
-		gitObject := object.GitObject{
+
+		gitObject := object.BlobObject{
 			Content: dataToWrite,
-			Type:    "blob",
 		}
 
 		if !writeObject || readFromStdin {
 			// Only calculate HASH and print
-			encodedData := gitObject.Encode()
-			hash := sha.ConvertToShaHex(encodedData)
-			fmt.Print(hash)
-		} else {
-			// hash and write
-			repo := repo.Repo{}
-			gitDir, err := repo.FindGitDir(".")
+			encodedData, err := gitObject.Encode()
 			if err != nil {
 				log.Fatal(err)
 			}
-			hash, err := repo.WriteObject(gitDir, gitObject)
+			hash := sha.ConvertToShaHex([]byte(encodedData))
+			fmt.Print(hash)
+		} else {
+			// hash and write
+			currentWd, err := os.Getwd()
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			repo, err := repo.NewRepo(currentWd)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			hash, err := repo.Write(database.Object{
+				Type:    "blob",
+				Content: dataToWrite,
+			})
+
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -83,7 +96,6 @@ var hashObjectCmd = &cobra.Command{
 
 func init() {
 
-	hashObjectCmd.PersistentFlags().StringVarP(&objectType, "type", "t", "blob", "type of object to hash")
 	hashObjectCmd.PersistentFlags().BoolVarP(&writeObject, "write", "w", false, "write object")
 	hashObjectCmd.PersistentFlags().BoolVarP(&readFromStdin, "stdin", "s", false, "read from stdin")
 

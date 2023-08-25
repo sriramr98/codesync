@@ -39,13 +39,12 @@ to quickly create a Cobra application.`,
 			log.Fatal(err)
 		}
 
-		repo := repo.Repo{}
-		gitPath, err := repo.FindGitDir(currentDirPath)
+		repo, err := repo.NewRepo(currentDirPath)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		object, err := repo.ReadObject(gitPath, args[0])
+		object, err := repo.Read(args[0])
 		if err != nil {
 			log.Fatal(err)
 		}

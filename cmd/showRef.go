@@ -1,19 +1,15 @@
-/*
-Copyright © 2023 NAME HERE <EMAIL ADDRESS>
-*/
 package cmd
 
 import (
 	"fmt"
-	"log"
-
 	"github.com/spf13/cobra"
 	"gitub.com/sriramr98/codesync/repo"
+	"log"
 )
 
-// statusCmd represents the status command
-var statusCmd = &cobra.Command{
-	Use:   "status",
+// TODO: Add show-ref for a specific reference
+var showRefCmd = &cobra.Command{
+	Use:   "show-ref",
 	Short: "A brief description of your command",
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
@@ -22,28 +18,32 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		repo, err := repo.NewRepo(".")
+		gitRepo, err := repo.NewRepo(".")
 		if err != nil {
 			log.Fatal(err)
 		}
-		status, err := repo.Status()
+
+		refs, err := gitRepo.FetchRefs()
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Println(status)
+
+		for _, ref := range refs {
+			fmt.Printf("%s %s\n", ref.SHA, ref.Path)
+		}
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(statusCmd)
+	rootCmd.AddCommand(showRefCmd)
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// statusCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// showRefCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// statusCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// showRefCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

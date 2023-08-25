@@ -4,25 +4,21 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"gitub.com/sriramr98/codesync/repo/object"
+	"gitub.com/sriramr98/codesync/parsers"
 )
 
 func (r Repo) PrintTree(objectSha string) error {
-	gitPath, err := r.FindGitDir(".")
+	gitObj, err := r.Read(objectSha)
 	if err != nil {
 		return err
 	}
 
-	gitObj, err := r.ReadObject(gitPath, objectSha)
+	treeObj, err := parsers.ParseTree([]byte(gitObj.Content))
 	if err != nil {
 		return err
 	}
 
-	treeObj, err := object.NewTreeObject(gitObj)
-	if err != nil {
-		return err
-	}
-
+	//fmt.Println(treeObj)
 	for _, node := range treeObj.Nodes {
 
 		objMode := node.Mode[0:2]
