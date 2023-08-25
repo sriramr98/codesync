@@ -1,31 +1,44 @@
-package repo
+package database
 
 import (
 	"bytes"
 	"errors"
 	"fmt"
+	"gitub.com/sriramr98/codesync/libs/sha"
+	"gitub.com/sriramr98/codesync/libs/zlib"
 	"io"
 	"io/fs"
 	"os"
 	"path"
 	"strconv"
-
-	"gitub.com/sriramr98/codesync/libs/sha"
-	"gitub.com/sriramr98/codesync/libs/zlib"
-	"gitub.com/sriramr98/codesync/repo/object"
 )
 
-func (r Repo) ReadObject(gitFolderPath string, sha string) (object.GitObject, error) {
-	objectFile, err := r.findFileFromSHA(gitFolderPath, sha)
+type Database[T any] interface {
+	Read(string) (T, error)
+	Write(T) (string, error)
+}
+
+type GitDB struct {
+	path string // the path to store objects
+}
+
+func NewGitDB(path string) GitDB {
+	return GitDB{
+		path: path,
+	}
+}
+
+// ID has two parts -> first two characters are folder name and the rest are filename
+func (d GitDB) Read(id string) (Object, error) {
+	objectFile, err := findFileFromID(d.path, id)
 	if err != nil {
-		return object.GitObject{}, err
+		return Object{}, err
 	}
 	defer objectFile.Close()
 
 	data, err := zlib.UnCompress(objectFile)
 	if err != nil {
-		fmt.Println("Uncompress err")
-		return object.GitObject{}, err
+		return Object{}, err
 	}
 
 	// finding the first space to detect the object type
@@ -36,19 +49,19 @@ func (r Repo) ReadObject(gitFolderPath string, sha string) (object.GitObject, er
 	nullEndIndex := bytes.Index(data, []byte("\x00"))
 	size, err := strconv.Atoi(string(data[typeEndIndex+1 : nullEndIndex]))
 	if err != nil {
-		return object.GitObject{}, err
+		return Object{}, err
 	}
 
 	// if parsed size doesn't match the actual size of remaining data, return error
 	if size != len(data)-nullEndIndex-1 {
-		return object.GitObject{}, fmt.Errorf("size mismatch")
+		return Object{}, fmt.Errorf("size mismatch")
 	}
 
 	objectContent := string(data[nullEndIndex+1:])
-	return object.GitObject{Type: string(objectType), Content: objectContent}, nil
+	return Object{Type: string(objectType), Content: objectContent}, nil
 }
 
-func (r Repo) WriteObject(gitFolderPath string, data object.GitObject) (string, error) {
+func (d GitDB) Write(data Object) (string, error) {
 	objectContent := data.Encode()
 
 	shaHex := sha.ConvertToShaHex(objectContent)
@@ -56,17 +69,12 @@ func (r Repo) WriteObject(gitFolderPath string, data object.GitObject) (string, 
 	objectFolderName := shaHex[0:2]
 	objectFileName := shaHex[2:]
 
-	foldePath := path.Join(gitFolderPath, "objects", objectFolderName)
+	foldePath := path.Join(d.path, objectFolderName)
 
 	err := os.MkdirAll(foldePath, 0755)
 	if err != nil {
 		return "", err
 	}
-
-	// file, err := os.Open(path.Join(foldePath, objectFileName))
-	// if err != nil {
-	// 	return "", err
-	// }
 
 	var b bytes.Buffer
 	zlib.Compress(objectContent, &b)
@@ -90,11 +98,11 @@ func (r Repo) WriteObject(gitFolderPath string, data object.GitObject) (string, 
 	return shaHex, nil
 }
 
-func (r Repo) findFileFromSHA(rootFolderPath string, sha string) (fs.File, error) {
-	objectFolderName := sha[0:2]
-	objectFile := sha[2:]
+func findFileFromID(dbPath string, id string) (fs.File, error) {
+	objectFolderName := id[0:2]
+	objectFile := id[2:]
 
-	objectDirFS := os.DirFS(path.Join(rootFolderPath, "objects", objectFolderName))
+	objectDirFS := os.DirFS(path.Join(dbPath, objectFolderName))
 	files, err := fs.Glob(objectDirFS, fmt.Sprintf("%s*", objectFile))
 	if err != nil {
 		return nil, err

@@ -16,12 +16,18 @@ and usage of using your command. For example:
 Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
-	Args: cobra.MaximumNArgs(1),
+	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
+		if len(args) == 0 {
+			log.Fatal("InvalidArgs")
+		}
 		objectSha := args[0]
-		gitRepo := repo.Repo{}
+		gitRepo, err := repo.NewRepo(".")
+		if err != nil {
+			log.Fatal(err)
+		}
 
-		err := gitRepo.PrintTree(objectSha)
+		err = gitRepo.PrintTree(objectSha)
 		if err != nil {
 			log.Fatal(err)
 		}
