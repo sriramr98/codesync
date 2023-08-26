@@ -3,7 +3,7 @@ package git
 import (
 	"errors"
 	"gitub.com/sriramr98/codesync/database"
-	"io/fs"
+	"gitub.com/sriramr98/codesync/workspace"
 	"os"
 	"path"
 	"path/filepath"
@@ -13,11 +13,11 @@ import (
 type Git struct {
 	database.Database[database.Object]
 
-	gitPath string
-	repoFS  fs.FS
+	gitPath   string
+	workspace workspace.Workspace
 }
 
-func NewRepo(dirPath string) (Git, error) {
+func NewGit(dirPath string) (Git, error) {
 	gitPath, err := findGitDir(dirPath)
 	if err != nil {
 		return Git{}, err
@@ -32,11 +32,15 @@ func NewRepo(dirPath string) (Git, error) {
 	}
 
 	objectsPath := path.Join(gitPath, "objects")
+	ws, err := workspace.NewWorkspace(projectRootPath)
+	if err != nil {
+		return Git{}, err
+	}
 
 	return Git{
-		Database: database.NewGitDB(objectsPath),
-		gitPath:  gitPath,
-		repoFS:   os.DirFS(projectRootPath),
+		Database:  database.NewGitDB(objectsPath),
+		gitPath:   gitPath,
+		workspace: ws,
 	}, nil
 }
 

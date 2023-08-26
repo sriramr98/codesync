@@ -75,7 +75,7 @@ var hashObjectCmd = &cobra.Command{
 				log.Fatal(err)
 			}
 
-			repo, err := git.NewRepo(currentWd)
+			repo, err := git.NewGit(currentWd)
 			if err != nil {
 				log.Fatal(err)
 			}

@@ -37,7 +37,7 @@ func (b CommitObject) Encode() (string, error) {
 	if b.ParentId != "" {
 		output = fmt.Sprintf("%s\nparent %s", output, b.ParentId)
 	}
-	output = fmt.Sprintf("%s\nauthor %s\ncommitter%s\n\n%s", output, authorStr, committerStr, b.CommitMessage)
+	output = fmt.Sprintf("%s\nauthor %s\ncommitter %s\n\n%s", output, authorStr, committerStr, b.CommitMessage)
 
 	return output, nil
 }

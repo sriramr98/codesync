@@ -39,7 +39,7 @@ to quickly create a Cobra application.`,
 			log.Fatal(err)
 		}
 
-		repo, err := git.NewRepo(currentDirPath)
+		repo, err := git.NewGit(currentDirPath)
 		if err != nil {
 			log.Fatal(err)
 		}

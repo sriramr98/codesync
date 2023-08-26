@@ -7,8 +7,8 @@ import (
 	"gitub.com/sriramr98/codesync/parsers"
 )
 
-func (r Git) PrintTree(objectSha string) error {
-	gitObj, err := r.Read(objectSha)
+func (g Git) PrintTree(objectSha string) error {
+	gitObj, err := g.Read(objectSha)
 	if err != nil {
 		return err
 	}
@@ -28,7 +28,7 @@ func (r Git) PrintTree(objectSha string) error {
 			return errors.New("invalid tree node")
 		}
 
-		fmt.Printf("%s %s %s\t%s\n", node.Mode, objType, node.Sha, node.Path)
+		fmt.Printf("%s %s %s\t%s\n", node.Mode, objType, node.Sha, node.FileName)
 	}
 
 	return nil

@@ -22,7 +22,7 @@ to quickly create a Cobra application.`,
 			log.Fatal("InvalidArgs")
 		}
 		objectSha := args[0]
-		gitRepo, err := git.NewRepo(".")
+		gitRepo, err := git.NewGit(".")
 		if err != nil {
 			log.Fatal(err)
 		}
