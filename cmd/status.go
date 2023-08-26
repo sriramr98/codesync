@@ -8,7 +8,7 @@ import (
 	"log"
 
 	"github.com/spf13/cobra"
-	"gitub.com/sriramr98/codesync/repo"
+	"gitub.com/sriramr98/codesync/git"
 )
 
 // statusCmd represents the status command
@@ -22,7 +22,7 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		repo, err := repo.NewRepo(".")
+		repo, err := git.NewRepo(".")
 		if err != nil {
 			log.Fatal(err)
 		}

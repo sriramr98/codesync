@@ -1,31 +1,42 @@
-package repo
+package git
 
 import (
 	"errors"
 	"gitub.com/sriramr98/codesync/database"
+	"io/fs"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
 )
 
-type Repo struct {
+type Git struct {
 	database.Database[database.Object]
 
 	gitPath string
+	repoFS  fs.FS
 }
 
-func NewRepo(dirPath string) (Repo, error) {
+func NewRepo(dirPath string) (Git, error) {
 	gitPath, err := findGitDir(dirPath)
 	if err != nil {
-		return Repo{}, err
+		return Git{}, err
+	}
+
+	projectRootPath, found := strings.CutSuffix(gitPath, "/.git")
+	if !found {
+		return Git{}, errors.New("invalid GIT dir")
+	}
+	if err != nil {
+		return Git{}, err
 	}
 
 	objectsPath := path.Join(gitPath, "objects")
 
-	return Repo{
+	return Git{
 		Database: database.NewGitDB(objectsPath),
 		gitPath:  gitPath,
+		repoFS:   os.DirFS(projectRootPath),
 	}, nil
 }
 

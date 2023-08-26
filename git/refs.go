@@ -1,4 +1,4 @@
-package repo
+package git
 
 import (
 	"fmt"
@@ -12,7 +12,7 @@ type Ref struct {
 	Path string
 }
 
-func (r Repo) FetchRefs() ([]Ref, error) {
+func (r Git) FetchRefs() ([]Ref, error) {
 	refRoot := path.Join("refs", "heads")
 
 	files, err := os.ReadDir(path.Join(r.gitPath, refRoot))
@@ -45,7 +45,7 @@ func (r Repo) FetchRefs() ([]Ref, error) {
 	return refs, nil
 }
 
-func (r Repo) ResolveRef(refPath string) (string, error) {
+func (r Git) ResolveRef(refPath string) (string, error) {
 	contentBytes, err := os.ReadFile(path.Join(r.gitPath, refPath))
 	if err != nil {
 		fmt.Printf("%v\n", err)

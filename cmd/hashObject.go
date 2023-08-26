@@ -10,8 +10,8 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"gitub.com/sriramr98/codesync/git"
 	"gitub.com/sriramr98/codesync/libs/sha"
-	"gitub.com/sriramr98/codesync/repo"
 )
 
 var writeObject bool
@@ -75,7 +75,7 @@ var hashObjectCmd = &cobra.Command{
 				log.Fatal(err)
 			}
 
-			repo, err := repo.NewRepo(currentWd)
+			repo, err := git.NewRepo(currentWd)
 			if err != nil {
 				log.Fatal(err)
 			}

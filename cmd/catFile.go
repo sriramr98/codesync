@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/spf13/cobra"
-	"gitub.com/sriramr98/codesync/repo"
+	"gitub.com/sriramr98/codesync/git"
 	"log"
 	"os"
 )
@@ -39,7 +39,7 @@ to quickly create a Cobra application.`,
 			log.Fatal(err)
 		}
 
-		repo, err := repo.NewRepo(currentDirPath)
+		repo, err := git.NewRepo(currentDirPath)
 		if err != nil {
 			log.Fatal(err)
 		}

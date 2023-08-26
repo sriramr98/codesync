@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
-	"gitub.com/sriramr98/codesync/repo"
+	"gitub.com/sriramr98/codesync/git"
 	"log"
 )
 
@@ -22,7 +22,7 @@ to quickly create a Cobra application.`,
 			log.Fatal("InvalidArgs")
 		}
 		objectSha := args[0]
-		gitRepo, err := repo.NewRepo(".")
+		gitRepo, err := git.NewRepo(".")
 		if err != nil {
 			log.Fatal(err)
 		}

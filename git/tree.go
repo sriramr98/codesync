@@ -1,4 +1,4 @@
-package repo
+package git
 
 import (
 	"bytes"
@@ -7,7 +7,7 @@ import (
 	"gitub.com/sriramr98/codesync/parsers"
 )
 
-func (r Repo) PrintTree(objectSha string) error {
+func (r Git) PrintTree(objectSha string) error {
 	gitObj, err := r.Read(objectSha)
 	if err != nil {
 		return err
