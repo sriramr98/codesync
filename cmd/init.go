@@ -15,14 +15,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var ErrUnableToInitialize = errors.New("unable to initialize repo")
-var ErrAlreadyInitialized = errors.New("repo already initialized")
+var ErrUnableToInitialize = errors.New("unable to initialize git")
+var ErrAlreadyInitialized = errors.New("git already initialized")
 
 // initCmd represents the init command
 var initCmd = &cobra.Command{
 	Use:   "init",
-	Short: "Initialize a new git repo",
-	Long:  `Initialize a new git repo, ignores if already a git repo`,
+	Short: "Initialize a new git git",
+	Long:  `Initialize a new git git, ignores if already a git git`,
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		var path string
@@ -41,7 +41,7 @@ var initCmd = &cobra.Command{
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Println("Empty repo initialized")
+		fmt.Println("Empty git initialized")
 	},
 }
 
@@ -58,11 +58,11 @@ func initGitRepo(rootPath string) error {
 
 	log.Printf("Checking for git path %s\n", gitPath)
 	if _, err := os.Stat(gitPath); err == nil {
-		// git repo already exists
+		// git git already exists
 		return ErrAlreadyInitialized
 	}
 
-	log.Println("Initializing a new repo at " + rootPath)
+	log.Println("Initializing a new git at " + rootPath)
 	gitConfig, err := getConfig()
 	if err != nil {
 		return ErrUnableToInitialize

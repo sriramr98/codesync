@@ -1,4 +1,4 @@
-package repo
+package git
 
 import (
 	"fmt"
@@ -12,10 +12,10 @@ type Ref struct {
 	Path string
 }
 
-func (r Repo) FetchRefs() ([]Ref, error) {
+func (g Git) FetchRefs() ([]Ref, error) {
 	refRoot := path.Join("refs", "heads")
 
-	files, err := os.ReadDir(path.Join(r.gitPath, refRoot))
+	files, err := os.ReadDir(path.Join(g.gitPath, refRoot))
 	if err != nil {
 		return nil, err
 	}
@@ -33,7 +33,7 @@ func (r Repo) FetchRefs() ([]Ref, error) {
 		}
 
 		filePath := path.Join(refRoot, file.Name())
-		refContent, err := r.ResolveRef(filePath)
+		refContent, err := g.ResolveRef(filePath)
 		if err != nil {
 			// Corrupt ref, continue on
 			continue
@@ -45,8 +45,8 @@ func (r Repo) FetchRefs() ([]Ref, error) {
 	return refs, nil
 }
 
-func (r Repo) ResolveRef(refPath string) (string, error) {
-	contentBytes, err := os.ReadFile(path.Join(r.gitPath, refPath))
+func (g Git) ResolveRef(refPath string) (string, error) {
+	contentBytes, err := os.ReadFile(path.Join(g.gitPath, refPath))
 	if err != nil {
 		fmt.Printf("%v\n", err)
 		return "", err
@@ -56,7 +56,7 @@ func (r Repo) ResolveRef(refPath string) (string, error) {
 	if strings.HasPrefix(string(contentBytes[:5]), "ref: ") {
 		// ends with a \n, so we remove it
 		newRefPath := string(contentBytes[5 : contentLength-1])
-		return r.ResolveRef(newRefPath)
+		return g.ResolveRef(newRefPath)
 	} else {
 		// ends with a \n so we remove it
 		return string(contentBytes[:contentLength-1]), nil

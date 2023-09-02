@@ -2,12 +2,24 @@ package database
 
 import (
 	"bytes"
+	"gitub.com/sriramr98/codesync/object"
 	"strconv"
 )
 
 type Object struct {
 	Type    string
 	Content string
+}
+
+func NewObject(gitObj object.GitObject) (Object, error) {
+	content, err := gitObj.Encode()
+	if err != nil {
+		return Object{}, err
+	}
+	return Object{
+		Type:    gitObj.GitType(),
+		Content: content,
+	}, nil
 }
 
 // Encode object format

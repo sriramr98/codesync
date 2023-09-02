@@ -9,9 +9,9 @@ import (
 )
 
 type TreeNode struct {
-	Mode string
-	Path string
-	Sha  string
+	Mode     string
+	FileName string
+	Sha      string
 }
 
 type TreeObject struct {
@@ -31,7 +31,7 @@ func (b TreeObject) Encode() (string, error) {
 	for _, node := range b.Nodes {
 		result.WriteString(node.Mode)
 		result.WriteString(" ")
-		result.WriteString(node.Path)
+		result.WriteString(node.FileName)
 		result.WriteByte('\x00')
 
 		sha, err := hex.DecodeString(node.Sha)
@@ -50,8 +50,8 @@ func (b TreeObject) Encode() (string, error) {
 // Add a / to sort key so that directories are sorted after files
 func treeNodeSortKey(node TreeNode) string {
 	if strings.HasPrefix(node.Mode, "10") {
-		return node.Path
+		return node.FileName
 	} else {
-		return node.Path + "/"
+		return node.FileName + "/"
 	}
 }

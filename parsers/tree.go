@@ -48,5 +48,5 @@ func treeLeafParser(data []byte) (object.TreeNode, int, error) {
 	// we fetch 20 bytes from the null character considered as SHA and convert to HEX string
 	sha := hex.EncodeToString(data[pathEndIndex+1 : pathEndIndex+21])
 
-	return object.TreeNode{Mode: string(mode), Path: string(path), Sha: sha}, pathEndIndex + 21, nil
+	return object.TreeNode{Mode: string(mode), FileName: string(path), Sha: sha}, pathEndIndex + 21, nil
 }
