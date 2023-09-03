@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"gopkg.in/ini.v1"
 	"io"
 	"log"
 	"os"
@@ -13,6 +12,7 @@ import (
 	"path/filepath"
 
 	"github.com/spf13/cobra"
+	"gopkg.in/ini.v1"
 )
 
 var ErrUnableToInitialize = errors.New("unable to initialize git")

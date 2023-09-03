@@ -8,6 +8,7 @@ import (
 	"strings"
 )
 
+// This represents a single tree structure written to GIT
 type TreeNode struct {
 	Mode     string
 	FileName string

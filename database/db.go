@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"gitub.com/sriramr98/codesync/libs/sha"
-	"gitub.com/sriramr98/codesync/libs/zlib"
 	"io"
 	"io/fs"
 	"os"
 	"path"
 	"strconv"
+
+	"gitub.com/sriramr98/codesync/libs/sha"
+	"gitub.com/sriramr98/codesync/libs/zlib"
 )
 
 type Database[T any] interface {
@@ -70,6 +71,11 @@ func (d GitDB) Write(data Object) (string, error) {
 	objectFileName := shaHex[2:]
 
 	foldePath := path.Join(d.path, objectFolderName)
+
+	if _, err := os.Stat(path.Join(foldePath, objectFileName)); err == nil {
+		// this means the object already exists, so we don't need to write anything further
+		return shaHex, nil
+	}
 
 	err := os.MkdirAll(foldePath, 0755)
 	if err != nil {

@@ -9,21 +9,19 @@ import (
 
 	"gitub.com/sriramr98/codesync/database"
 	"gitub.com/sriramr98/codesync/object"
+	"gitub.com/sriramr98/codesync/workspace"
 )
 
 func (g Git) Commit(author object.Person, committer object.Person, commitMessage string) (string, error) {
 	//TODO: Support for nested directories
-	files, err := g.workspace.ListFiles(false, false)
+	workspaceTree, err := g.workspace.BuildTree()
 	if err != nil {
 		return "", err
 	}
 
-	writtenFiles, err := g.writeBlobs(files)
-	if err != nil {
-		return "", err
-	}
+	log.Printf("Workspace Tree to be written %s", workspaceTree)
+	treeId, err := g.recursivelyWriteWorkspace(workspaceTree)
 
-	treeId, err := g.writeTree(writtenFiles)
 	if err != nil {
 		return "", err
 	}
@@ -57,14 +55,14 @@ func (g Git) Commit(author object.Person, committer object.Person, commitMessage
 		return "", err
 	}
 
-	return fmt.Sprintf("%d files written to GIT. TreeID: %s, CommitID: %s", len(writtenFiles), treeId, commitId), err
+	return fmt.Sprintf("TreeID: %s, CommitID: %s", treeId, commitId), err
 }
 
-func (g Git) writeBlobs(files []os.DirEntry) (map[string]string, error) {
-	writtenFiles := make(map[string]string)
+func (g Git) writeBlobs(files []os.DirEntry, filesRootPath string) ([]object.TreeNode, error) {
+	writtenFiles := []object.TreeNode{}
 	for _, file := range files {
 		if !file.IsDir() {
-			content, err := os.ReadFile(path.Join(g.workspace.Path(), file.Name()))
+			content, err := os.ReadFile(path.Join(filesRootPath, file.Name()))
 			if err != nil {
 				return nil, err
 			}
@@ -82,25 +80,21 @@ func (g Git) writeBlobs(files []os.DirEntry) (map[string]string, error) {
 				return nil, err
 			}
 
-			writtenFiles[file.Name()] = id
+			fileNode := object.TreeNode{
+				Mode:     "100644",
+				FileName: file.Name(),
+				Sha:      id,
+			}
+			writtenFiles = append(writtenFiles, fileNode)
 		}
 	}
 
 	return writtenFiles, nil
 }
 
-func (g Git) writeTree(files map[string]string) (string, error) {
-	var treeEntries []object.TreeNode
-	for fileName, fileId := range files {
-		treeEntries = append(treeEntries, object.TreeNode{
-			FileName: fileName,
-			Sha:      fileId,
-			//TODO: Extract mode from file
-			Mode: "100644",
-		})
-	}
+func (g Git) writeTree(files []object.TreeNode) (string, error) {
 	dirTree := object.TreeObject{
-		Nodes: treeEntries,
+		Nodes: files,
 	}
 	dbObj, err := database.NewObject(dirTree)
 	if err != nil {
@@ -108,6 +102,31 @@ func (g Git) writeTree(files map[string]string) (string, error) {
 	}
 
 	return g.Write(dbObj)
+}
+
+// writes the entire tree to GIT and returns the sha of the root tree
+func (g Git) recursivelyWriteWorkspace(tree workspace.Tree) (string, error) {
+	filesWritten, err := g.writeBlobs(tree.Files, tree.RootPath)
+	if err != nil {
+		return "", err
+	}
+
+	for _, folder := range tree.SubTrees {
+		log.Printf("Writing subtree for %s with filecount %d", folder.Name, len(folder.Files))
+		treeId, err := g.recursivelyWriteWorkspace(folder)
+		if err != nil {
+			return "", err
+		}
+
+		treeNode := object.TreeNode{
+			FileName: folder.Name,
+			Sha:      treeId,
+			Mode:     "40000",
+		}
+		filesWritten = append(filesWritten, treeNode)
+	}
+
+	return g.writeTree(filesWritten)
 }
 
 func (g Git) writeCommitToHEAD(commitId string) error {
