@@ -20,6 +20,7 @@ type Person struct {
 
 // Format Formats the object the way git recognises it
 func (p Person) Format() string {
+	//TODO: Fix format of timestamp
 	return fmt.Sprintf("%s <%s> %s", p.Name, p.Email, p.Timestamp)
 }
 

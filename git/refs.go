@@ -2,6 +2,7 @@ package git
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path"
 	"strings"
@@ -58,7 +59,58 @@ func (g Git) ResolveRef(refPath string) (string, error) {
 		newRefPath := string(contentBytes[5 : contentLength-1])
 		return g.ResolveRef(newRefPath)
 	} else {
-		// ends with a \n so we remove it
-		return string(contentBytes[:contentLength-1]), nil
+		refContent := string(contentBytes)
+		if strings.HasSuffix(refContent, "\n") {
+			log.Printf("Trimming newline from ref %s", refContent)
+			return strings.TrimSuffix(refContent, "\n"), nil
+		}
+		return refContent, nil
 	}
+}
+
+func (g Git) FetchHeadRefPath() (string, error) {
+	_, err := os.Stat(path.Join(g.gitPath, "HEAD"))
+	if err == nil {
+		return "", err
+	}
+
+	headRefBytes, err := os.ReadFile(path.Join(g.gitPath, "HEAD"))
+	if err != nil {
+		return "", err
+	}
+
+	log.Printf("HEAD Content: %s\n", string(headRefBytes))
+	// Remove the last \n character
+	return strings.Split(string(headRefBytes[:len(headRefBytes)-1]), "ref: ")[1], nil
+}
+
+func (g Git) UpdateHeadRef(id string) error {
+	headRefPath, err := g.FetchHeadRefPath()
+	if err != nil {
+		//TODO: handle if err is os.ErrNotFound
+		return err
+	}
+	fmt.Printf("Updating Ref %s\n", headRefPath)
+	refPath := path.Join(g.gitPath, headRefPath)
+	return os.WriteFile(refPath, []byte(id), 0644)
+}
+
+func (g Git) UpdateHeadFile(id string) error {
+	headPath := path.Join(g.gitPath, "HEAD")
+	if _, err := os.Stat(headPath); err != nil {
+		//TODO: Handle err is os.ErrNotFound
+		return err
+	}
+
+	return os.WriteFile(headPath, []byte(id), 0644)
+}
+
+func (g Git) GetHeadRef() (string, error) {
+	// headRefPath, err := g.FetchHeadRefPath()
+	// if err != nil {
+	// 	return "", err
+	// }
+
+	// log.Printf("Fetching ref from path %s\n", headRefPath)
+	return g.ResolveRef("HEAD")
 }

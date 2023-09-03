@@ -2,11 +2,13 @@ package git
 
 import (
 	"fmt"
-	"gitub.com/sriramr98/codesync/database"
-	"gitub.com/sriramr98/codesync/object"
+	"log"
 	"os"
 	"path"
 	"strings"
+
+	"gitub.com/sriramr98/codesync/database"
+	"gitub.com/sriramr98/codesync/object"
 )
 
 func (g Git) Commit(author object.Person, committer object.Person, commitMessage string) (string, error) {
@@ -22,11 +24,22 @@ func (g Git) Commit(author object.Person, committer object.Person, commitMessage
 	}
 
 	treeId, err := g.writeTree(writtenFiles)
+	if err != nil {
+		return "", err
+	}
+
+	parentId, err := g.GetHeadRef()
+	if err != nil {
+		parentId = ""
+	}
+
+	log.Printf("ParentID: %s\n", parentId)
 
 	//TODO: Add support for parent
 	commit := object.CommitObject{
 		TreeId:        treeId,
 		Author:        author,
+		ParentId:      parentId,
 		Committer:     committer,
 		CommitMessage: commitMessage,
 	}
