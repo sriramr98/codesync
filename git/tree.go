@@ -1,8 +1,6 @@
 package git
 
 import (
-	"bytes"
-	"errors"
 	"fmt"
 
 	"gitub.com/sriramr98/codesync/parsers"
@@ -21,30 +19,13 @@ func (g Git) PrintTree(objectSha string) error {
 
 	//fmt.Println(treeObj)
 	for _, node := range treeObj.Nodes {
-
-		objMode := node.Mode[0:2]
-		objType := byteToType([]byte(objMode))
-
-		if objType == "" {
-			return errors.New("invalid tree node")
+		treeStr, err := node.ToString()
+		if err != nil {
+			return err
 		}
 
-		fmt.Printf("%s %s %s\t%s\n", node.Mode, objType, node.Sha, node.FileName)
+		fmt.Println(treeStr)
 	}
 
 	return nil
-}
-
-func byteToType(data []byte) string {
-	if bytes.Equal(data, []byte("04")) {
-		return "tree"
-	} else if bytes.Equal(data, []byte("10")) {
-		return "blob" // this is a normal blob file
-	} else if bytes.Equal(data, []byte("12")) {
-		return "blob" // this is a symlink pointing to a blob
-	} else if bytes.Equal(data, []byte("16")) {
-		return "commit"
-	} else {
-		return ""
-	}
 }

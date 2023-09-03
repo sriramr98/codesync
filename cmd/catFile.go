@@ -2,10 +2,13 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
-	"gitub.com/sriramr98/codesync/git"
 	"log"
 	"os"
+
+	"github.com/spf13/cobra"
+	"gitub.com/sriramr98/codesync/git"
+	"gitub.com/sriramr98/codesync/object"
+	"gitub.com/sriramr98/codesync/parsers"
 )
 
 var prettyPrint bool = false
@@ -44,20 +47,33 @@ to quickly create a Cobra application.`,
 			log.Fatal(err)
 		}
 
-		object, err := repo.Read(args[0])
+		dbObj, err := repo.Read(args[0])
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		if prettyPrint {
-			fmt.Println(object.Content)
+		if typePrint {
+			fmt.Println(dbObj.Type)
 			return
 		}
 
-		if typePrint {
-			fmt.Println(object.Type)
+		var gitObj object.GitObject
+		switch dbObj.Type {
+		case "tree":
+			gitObj, err = parsers.ParseTree([]byte(dbObj.Content))
+		case "commit":
+			gitObj, err = parsers.ParseCommit([]byte(dbObj.Content))
+		case "blob":
+			gitObj = object.BlobObject{
+				Content: dbObj.Content,
+			}
 		}
 
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		gitObj.Print()
 	},
 }
 

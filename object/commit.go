@@ -42,3 +42,7 @@ func (b CommitObject) Encode() (string, error) {
 
 	return output, nil
 }
+
+func (b CommitObject) Print() {
+	fmt.Println(b.Encode())
+}
