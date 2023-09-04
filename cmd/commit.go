@@ -2,12 +2,13 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
-	"gitub.com/sriramr98/codesync/git"
-	"gitub.com/sriramr98/codesync/object"
 	"log"
 	"os"
 	"time"
+
+	"github.com/spf13/cobra"
+	"gitub.com/sriramr98/codesync/git"
+	"gitub.com/sriramr98/codesync/object"
 )
 
 var authorName string
@@ -51,8 +52,8 @@ to quickly create a Cobra application.`,
 		}
 
 		now := time.Now()
-		_, offset := now.Zone()
-		timestamp := fmt.Sprintf("%d %d", now.Unix(), offset)
+		//TODO: figure out how to infer the timezone offset in this format
+		timestamp := fmt.Sprintf("%d %s", now.Unix(), "+0530")
 		author := object.Person{
 			Name:      authorName,
 			Email:     authorEmail,
